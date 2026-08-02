@@ -20,7 +20,7 @@ export function AppHeader({ onSearch }: { onSearch?: (keyword: string) => void }
   // reads as flat at rest and lifted while scrolling.
   useEffect(() => {
     function handleScroll() {
-      setScrolled(window.scrollY > 4);
+    setScrolled(window.scrollY > 4);
     }
 
     handleScroll();
