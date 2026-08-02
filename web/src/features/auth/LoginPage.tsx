@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { ApiRequestError } from '../../api/client';
 import { Button } from '../../components/ui/Button';
 import { Input, PasswordInput } from '../../components/ui/Input';
+import { Checkbox } from '../../components/ui/Checkbox';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../lib/toast';
 import { AuthLayout } from './AuthLayout';
@@ -94,29 +95,12 @@ export function LoginPage() {
           }
         />
 
-        <label className="group flex w-fit cursor-pointer select-none items-center gap-2.5 text-sm text-ink-soft transition-colors duration-150 hover:text-ink">
-          <span className="relative grid size-4.5 place-items-center">
-            <input
-              type="checkbox"
-              checked={remember}
-              onChange={(event) => setRemember(event.target.checked)}
-              className="peer size-4.5 cursor-pointer appearance-none rounded-md border border-line-strong bg-surface transition-[background-color,border-color] duration-150 checked:border-brand-500 checked:bg-brand-500 focus-visible:ring-4 focus-visible:ring-brand-500/15 group-hover:border-brand-400"
-            />
-            <svg
-              aria-hidden
-              viewBox="0 0 24 24"
-              className="pointer-events-none absolute size-3 scale-50 text-white opacity-0 transition-[opacity,transform] duration-150 ease-out-quint peer-checked:scale-100 peer-checked:opacity-100"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 6 9 17l-5-5" />
-            </svg>
-          </span>
+        <Checkbox
+          checked={remember}
+          onChange={(event) => setRemember(event.target.checked)}
+        >
           Ingat saya selama 30 hari
-        </label>
+        </Checkbox>
 
         <Button type="submit" size="lg" loading={submitting} fullWidth>
           Masuk
