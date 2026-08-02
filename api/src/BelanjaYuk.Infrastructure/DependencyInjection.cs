@@ -1,4 +1,6 @@
-﻿using BelanjaYuk.Infrastructure.Persistence;
+﻿using BelanjaYuk.Infrastructure.Security;
+using BelanjaYuk.Infrastructure.Persistence;
+using BelanjaYuk.Application.Common.Interfaces;
 using BelanjaYuk.Infrastructure.Persistence.Interceptors;
 
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,13 @@ public static class DependencyInjection
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             options.AddInterceptors(serviceProvider.GetRequiredService<AuditableEntityInterceptor>());
         });
+
+        services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+
+        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }

@@ -1,10 +1,11 @@
 ﻿using BelanjaYuk.Domain.Entities;
+using BelanjaYuk.Application.Common.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
 
 namespace BelanjaYuk.Infrastructure.Persistence;
 
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
 {
     // Lookup tables (Lt*)
     public DbSet<LtCategory> LtCategories => Set<LtCategory>();
