@@ -1,0 +1,55 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: belanjayuk-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  api:
+    build:
+      context: ./api
+    container_name: belanjayuk-api
+    depends_on:
+      # The API migrates and seeds on startup, so it must not start before
+      # SQL Server can accept connections.
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=BelanjaYuk;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=True"
+      Jwt__Secret: ${JWT_SECRET}
+      Jwt__Issuer: BelanjaYuk.Api
+      Jwt__Audience: BelanjaYuk.WebClient
+      Jwt__ExpiryMinutes: 120
+      Cors__AllowedOrigins__0: http://localhost:3000
+    ports:
+      - "5005:8080"
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_BASE_URL: http://localhost:5005/api/v1
+    container_name: belanjayuk-web
+    depends_on:
+      - api
+    ports:
+      - "3000:80"
+
+volumes:
+  mssql-data:
