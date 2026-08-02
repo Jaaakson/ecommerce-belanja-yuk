@@ -124,16 +124,16 @@ public class DatabaseSeeder(AppDbContext context)
         // calculation can be verified against a known expected total.
         (string Name, string Category, decimal Price, decimal? Discount, int Qty, string Image)[] catalogue =
         [
-            ("Headset Bluetooth", "Elektronik", 289_000m, 10m, 50, "https://placehold.co/400x400?text=Headset"),
-            ("Keyboard Mekanik", "Elektronik", 499_000m, null, 30, "https://placehold.co/400x400?text=Keyboard"),
-            ("Kemeja Polo", "Fashion", 159_000m, 15m, 80, "https://placehold.co/400x400?text=Kemeja"),
-            ("Jaket Anti Dingin", "Fashion", 279_000m, null, 40, "https://placehold.co/400x400?text=Jaket"),
-            ("Botol Tumbler", "Rumah Tangga", 99_000m, null, 120, "https://placehold.co/400x400?text=Tumbler"),
-            ("Peralatan Panci", "Rumah Tangga", 359_000m, null, 25, "https://placehold.co/400x400?text=Panci"),
-            ("Sepatu Lari", "Olahraga", 399_000m, null, 35, "https://placehold.co/400x400?text=Sepatu"),
-            ("Dumbbell Gym 20kg", "Olahraga", 149_000m, null, 60, "https://placehold.co/400x400?text=Dumbbell"),
-            ("Kopi Enak Banget Cik 200g", "Makanan", 69_000m, null, 200, "https://placehold.co/400x400?text=Kopi"),
-            ("Indomie Goreng", "Makanan", 19_900m, null, 500, "https://placehold.co/400x400?text=Mi")
+            ("Headset Bluetooth", "Elektronik", 289_000m, 10m, 50, "/products/headset_bluetooth.jpg"),
+            ("Keyboard Mekanik", "Elektronik", 499_000m, null, 30, "/products/keyboard_mekanik.jpg"),
+            ("Kemeja Polo", "Fashion", 159_000m, 15m, 80, "/products/kemeja_polo.jpg"),
+            ("Jaket Anti Dingin", "Fashion", 279_000m, null, 40, "/products/jaket_anti_dingin.jpg"),
+            ("Botol Tumbler", "Rumah Tangga", 99_000m, null, 120, "/products/botol_tumbler.jpg"),
+            ("Peralatan Panci", "Rumah Tangga", 359_000m, null, 25, "/products/peralatan_panci.jpg"),
+            ("Sepatu Lari", "Olahraga", 399_000m, null, 35, "/products/sepatu_lari.jpg"),
+            ("Dumbbell Gym 20kg", "Olahraga", 149_000m, null, 60, "/products/dumbbell_gym.jpg"),
+            ("Kopi Enak Banget Cik 200g", "Makanan", 69_000m, null, 200, "/products/kopi_enak_banget.jpg"),
+            ("Indomie Goreng", "Makanan", 19_900m, null, 500, "/products/indomie_goreng.jpg")
         ];
 
         foreach (var item in catalogue)
