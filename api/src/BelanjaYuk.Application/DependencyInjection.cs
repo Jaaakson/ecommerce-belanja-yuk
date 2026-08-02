@@ -1,8 +1,10 @@
-﻿using BelanjaYuk.Application.Features.Auth.Services;
-using BelanjaYuk.Application.Features.Lookups.Services;
-using BelanjaYuk.Application.Features.Products.Services;
+﻿using System.Reflection;
 
-using System.Reflection;
+using BelanjaYuk.Application.Features.Auth.Services;
+using BelanjaYuk.Application.Features.Cart.Services;
+using BelanjaYuk.Application.Features.Lookups.Services;
+using BelanjaYuk.Application.Features.Checkout.Services;
+using BelanjaYuk.Application.Features.Products.Services;
 
 using FluentValidation;
 
@@ -20,6 +22,10 @@ public static class DependencyInjection
 
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ILookupService, LookupService>();
+
+        services.AddScoped<ICartService, CartService>();
+
+        services.AddScoped<ICheckoutService, CheckoutService>();
 
         return services;
     }
