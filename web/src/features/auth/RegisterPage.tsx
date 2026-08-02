@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Checkbox } from '../../components/ui/Checkbox';
 import { Collapse } from '../../components/ui/Collapse';
 import { Input, PasswordInput } from '../../components/ui/Input';
+import { DatePicker } from '../../components/ui/DatePicker';
 import { Select } from '../../components/ui/Select';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../lib/toast';
@@ -228,13 +229,11 @@ export function RegisterPage() {
         />
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            name="dateOfBirth"
+          <DatePicker
             label="Tanggal Lahir"
-            type="date"
             value={form.dateOfBirth}
             error={errors.dateOfBirth}
-            onChange={(event) => update('dateOfBirth', event.target.value)}
+            onChange={(value) => update('dateOfBirth', value)}
           />
           <Select
             name="idGender"
