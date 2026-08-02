@@ -1,56 +1,82 @@
 import { useCallback, useState, type ReactNode } from 'react';
 import { ToastContext, type Toast, type ToastTone } from '../lib/toast';
 
-const DISMISS_AFTER_MS = 3500;
+const DISMISS_AFTER_MS = 3200;
 
-const toneStyles: Record<ToastTone, string> = {
-  success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  error: 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300',
-  info: 'border-brand-500/30 bg-brand-500/10 text-brand-700 dark:text-brand-100',
+const accents: Record<ToastTone, string> = {
+  success: 'text-positive',
+  error: 'text-critical',
+  info: 'text-brand-500',
 };
 
-const toneIcons: Record<ToastTone, string> = {
+const icons: Record<ToastTone, string> = {
   success: 'M20 6 9 17l-5-5',
-  error: 'M18 6 6 18M6 6l12 12',
-  info: 'M12 16v-4M12 8h.01',
+  error: 'M12 8v5M12 16h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z',
+  info: 'M12 16v-5M12 8h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z',
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const notify = useCallback((message: string, tone: ToastTone = 'success') => {
-    const id = Date.now() + Math.random();
+  const dismiss = useCallback(
+    (id: number) => setToasts((current) => current.filter((toast) => toast.id !== id)),
+    [],
+  );
 
-    setToasts((current) => [...current, { id, tone, message }]);
-    setTimeout(() => setToasts((current) => current.filter((t) => t.id !== id)), DISMISS_AFTER_MS);
-  }, []);
+  const notify = useCallback(
+    (message: string, tone: ToastTone = 'success') => {
+      const id = Date.now() + Math.random();
+
+      // Cap the stack: a queue taller than three obscures the page it reports on.
+      setToasts((current) => [...current.slice(-2), { id, tone, message }]);
+      setTimeout(() => dismiss(id), DISMISS_AFTER_MS);
+    },
+    [dismiss],
+  );
 
   return (
     <ToastContext.Provider value={{ notify }}>
       {children}
 
       <div
-        className="pointer-events-none fixed bottom-6 right-6 z-50 flex w-full max-w-sm flex-col gap-2"
         role="status"
         aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 top-4 z-[100] flex flex-col items-center gap-2 px-4"
       >
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-medium shadow-lg backdrop-blur-sm transition-all ${toneStyles[toast.tone]}`}
-            style={{ animation: 'toast-in 220ms cubic-bezier(0.22, 1, 0.36, 1)' }}
+            className="
+              pointer-events-auto flex w-full max-w-sm items-center gap-2.5
+              rounded-full border border-line bg-surface/85 py-2 pl-3 pr-2
+              shadow-lg backdrop-blur-xl
+              animate-rise
+            "
           >
             <svg
-              className="mt-0.5 size-4 shrink-0"
+              aria-hidden
               viewBox="0 0 24 24"
+              className={`size-4 shrink-0 ${accents[toast.tone]}`}
               fill="none"
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth="2.4"
               strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path d={toneIcons[toast.tone]} />
+              <path d={icons[toast.tone]} />
             </svg>
-            <span>{toast.message}</span>
+
+            <p className="flex-1 truncate text-xs font-medium text-ink">{toast.message}</p>
+
+            <button
+              onClick={() => dismiss(toast.id)}
+              aria-label="Tutup notifikasi"
+              className="grid size-6 shrink-0 place-items-center rounded-full text-ink-faint transition-colors duration-150 hover:bg-sunken hover:text-ink"
+            >
+              <svg viewBox="0 0 24 24" className="size-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         ))}
       </div>

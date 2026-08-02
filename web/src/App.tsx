@@ -1,22 +1,27 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { CartPage } from './features/cart/CartPage';
-import { HomePage } from './features/products/HomePage';
+import { PageTransition } from './routes/PageTransition';
 import { ProtectedRoute } from './routes/ProtectedRoute';
+import { RootRoute } from './routes/RootRoute';
 
 export default function App() {
+  const location = useLocation();
+
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <PageTransition>
+      <Routes location={location}>
+        <Route path="/" element={<RootRoute />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-      <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/cart" element={<CartPage />} />
-      </Route>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/cart" element={<CartPage />} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </PageTransition>
   );
 }

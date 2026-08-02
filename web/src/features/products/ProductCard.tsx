@@ -11,7 +11,11 @@ export function ProductCard({
   onAdd: (idProduct: string) => Promise<void>;
 }) {
   const [adding, setAdding] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   const isOutOfStock = product.qty <= 0;
+  const isLowStock = !isOutOfStock && product.qty <= 10;
+  const saving = product.price - product.finalPrice;
 
   async function handleAdd() {
     setAdding(true);
@@ -20,17 +24,31 @@ export function ProductCard({
   }
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] transition-all hover:-translate-y-0.5 hover:border-brand-500/40 hover:shadow-lg hover:shadow-brand-500/5">
-      <div className="relative aspect-square overflow-hidden bg-[var(--color-canvas)]">
+    <article
+      className={`
+        group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface
+        transition-[transform,box-shadow,border-color] duration-250 ease-out-quint
+        ${isOutOfStock ? '' : 'hover:-translate-y-1 hover:border-brand-200 hover:shadow-lg dark:hover:border-brand-500/30'}
+      `}
+    >
+      <div className="relative aspect-square overflow-hidden bg-sunken">
         {product.thumbnailUrl ? (
-          <img
-            src={product.thumbnailUrl}
-            alt={product.productName}
-            loading="lazy"
-            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          <>
+            {!imageLoaded && <div className="skeleton absolute inset-0" />}
+            <img
+              src={product.thumbnailUrl}
+              alt={product.productName}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              className={`
+                size-full object-cover transition-[opacity,transform] duration-500 ease-out-quint
+                ${imageLoaded ? 'opacity-100' : 'opacity-0'}
+                ${isOutOfStock ? 'grayscale' : 'group-hover:scale-[1.06]'}
+              `}
+            />
+          </>
         ) : (
-          <div className="grid size-full place-items-center text-[var(--color-muted)]/40">
+          <div className="grid size-full place-items-center text-ink-faint/30">
             <svg viewBox="0 0 24 24" className="size-10" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
@@ -40,46 +58,59 @@ export function ProductCard({
         )}
 
         {product.discountPercentage ? (
-          <span className="absolute left-2 top-2 rounded-lg bg-rose-500 px-2 py-0.5 text-[11px] font-bold text-white">
-            {product.discountPercentage}%
+          <span className="absolute left-2.5 top-2.5 rounded-lg bg-critical px-2 py-1 text-[10px] font-bold leading-none tabular text-white shadow-sm">
+            −{product.discountPercentage}%
           </span>
         ) : null}
 
         {isOutOfStock && (
-          <div className="absolute inset-0 grid place-items-center bg-[var(--color-surface)]/80 backdrop-blur-[2px]">
-            <span className="text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+          <div className="absolute inset-0 grid place-items-center bg-surface/70 backdrop-blur-[1px]">
+            <span className="rounded-lg bg-surface px-2.5 py-1 text-2xs font-bold uppercase tracking-wide text-ink-soft shadow-sm">
               Stok habis
             </span>
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-muted)]">
+      <div className="flex flex-1 flex-col p-3">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint">
           {product.categoryName}
         </span>
 
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--color-ink)]">
+        <h3 className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-ink transition-colors duration-150 group-hover:text-brand-600 dark:group-hover:text-brand-300">
           {product.productName}
         </h3>
 
-        <div className="mt-auto pt-2">
-          {product.discountPercentage ? (
-            <span className="block text-xs text-[var(--color-muted)] line-through">
-              {formatRupiah(product.price)}
-            </span>
-          ) : null}
+        <div className="mt-auto pt-2.5">
+          <div className="flex min-h-4 items-baseline gap-1.5">
+            {saving > 0 && (
+              <>
+                <span className="text-2xs text-ink-faint line-through tabular">
+                  {formatRupiah(product.price)}
+                </span>
+                <span className="text-2xs font-semibold text-critical tabular">
+                  hemat {formatRupiah(saving)}
+                </span>
+              </>
+            )}
+          </div>
 
-          <div className="flex items-end justify-between gap-2">
-            <span className="font-display text-base font-extrabold text-[var(--color-ink)]">
-              {formatRupiah(product.finalPrice)}
-            </span>
+          <div className="mt-0.5 flex items-end justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate font-display text-base font-extrabold tracking-tight text-ink tabular">
+                {formatRupiah(product.finalPrice)}
+              </p>
+              {isLowStock && (
+                <p className="text-[10px] font-medium text-caution">Sisa {product.qty}</p>
+              )}
+            </div>
 
             <Button
+              size="sm"
               onClick={handleAdd}
               loading={adding}
               disabled={isOutOfStock}
-              className="!px-3 !py-1.5 text-xs"
+              aria-label={`Tambah ${product.productName} ke keranjang`}
             >
               Tambah
             </Button>

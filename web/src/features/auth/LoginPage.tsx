@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ApiRequestError } from '../../api/client';
+import type { ApiRequestError } from '../../api/client';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
+import { Input, PasswordInput } from '../../components/ui/Input';
+import { Checkbox } from '../../components/ui/Checkbox';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../lib/toast';
 import { AuthLayout } from './AuthLayout';
@@ -16,7 +17,6 @@ export function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,7 +40,6 @@ export function LoginPage() {
     } catch (error) {
       const apiError = error as ApiRequestError;
 
-      // Field-level messages attach to the input; anything else surfaces as a toast.
       if (apiError.fieldErrors) {
         setErrors(
           Object.fromEntries(
@@ -60,71 +59,66 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      title="Hai, selamat datang kembali 👋"
-      subtitle="Masuk pakai email atau no. HP yang terdaftar."
+      title="Selamat datang kembali"
+      subtitle="Masuk pakai email atau nomor HP yang terdaftar."
     >
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Input
           name="identifier"
-          label="Email / No. HP"
-          placeholder="contoh@mail.com / 0812xxxx"
-          hint="Format email valid atau nomor HP Indonesia"
+          label="Email atau No. HP"
+          placeholder="contoh@mail.com"
           value={identifier}
           error={errors.identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
+          onChange={(event) => setIdentifier(event.target.value)}
           autoComplete="username"
+          leading={
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <path d="m3 7 9 6 9-6" strokeLinecap="round" />
+            </svg>
+          }
         />
 
-        <div className="relative">
-          <Input
-            name="password"
-            label="Kata Sandi"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={password}
-            error={errors.password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            className="pr-11"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
-            className="absolute right-3 top-8 text-[var(--color-muted)] transition-colors hover:text-brand-500"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="size-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
-              <circle cx="12" cy="12" r="3" />
-              {showPassword && <path d="m3 3 18 18" strokeLinecap="round" />}
+        <PasswordInput
+          name="password"
+          label="Kata Sandi"
+          placeholder="Masukkan kata sandi"
+          value={password}
+          error={errors.password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          leading={
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="4" y="10" width="16" height="11" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" strokeLinecap="round" />
             </svg>
-          </button>
-        </div>
+          }
+        />
 
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--color-muted)]">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
-            className="size-4 rounded border-[var(--color-line)] accent-brand-500"
-          />
-          Ingat saya
-        </label>
+        <Checkbox
+          checked={remember}
+          onChange={(event) => setRemember(event.target.checked)}
+        >
+          Ingat saya selama 30 hari
+        </Checkbox>
 
-        <Button type="submit" loading={submitting} className="w-full">
+        <Button type="submit" size="lg" loading={submitting} fullWidth>
           Masuk
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[var(--color-muted)]">
+      <div className="mt-6 flex items-center gap-3">
+        <span className="h-px flex-1 bg-line" />
+        <span className="text-2xs font-medium uppercase tracking-wide text-ink-faint">atau</span>
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      <p className="mt-6 text-center text-sm text-ink-soft">
         Belum punya akun?{' '}
-        <Link to="/register" className="font-semibold text-brand-500 hover:underline">
+        <Link
+          to="/register"
+          className="font-semibold text-brand-500 underline-offset-4 transition-colors duration-150 hover:text-brand-600 hover:underline"
+        >
           Daftar sekarang
         </Link>
       </p>

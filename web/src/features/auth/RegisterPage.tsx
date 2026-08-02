@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { lookupsApi } from '../../api/lookups';
 import type { ApiRequestError } from '../../api/client';
+import { lookupsApi } from '../../api/lookups';
 import type { LookupItem } from '../../api/types';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
+import { Checkbox } from '../../components/ui/Checkbox';
+import { Collapse } from '../../components/ui/Collapse';
+import { Input, PasswordInput } from '../../components/ui/Input';
+import { DatePicker } from '../../components/ui/DatePicker';
 import { Select } from '../../components/ui/Select';
 import { useAuth } from '../../lib/auth';
 import { useToast } from '../../lib/toast';
@@ -26,6 +29,24 @@ const emptyForm = {
   homeAddressDesc: '',
 };
 
+type FormField = keyof typeof emptyForm;
+
+/** Mirrors the server rule (minimum 8 characters) plus variety as a nudge. */
+function scorePassword(value: string) {
+  if (!value) return { level: 0, label: '', tone: '' };
+
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (value.length >= 12) score += 1;
+  if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score += 1;
+  if (/\d/.test(value) && /[^\w\s]/.test(value)) score += 1;
+
+  if (score <= 1) return { level: 1, label: 'Lemah', tone: 'bg-critical' };
+  if (score === 2) return { level: 2, label: 'Cukup', tone: 'bg-caution' };
+  if (score === 3) return { level: 3, label: 'Kuat', tone: 'bg-brand-500' };
+  return { level: 4, label: 'Sangat kuat', tone: 'bg-positive' };
+}
+
 export function RegisterPage() {
   const { register } = useAuth();
   const { notify } = useToast();
@@ -33,20 +54,36 @@ export function RegisterPage() {
 
   const [form, setForm] = useState(emptyForm);
   const [genders, setGenders] = useState<LookupItem[]>([]);
-  const [showAddress, setShowAddress] = useState(false);
+  const [withAddress, setWithAddress] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    lookupsApi
-      .genders()
-      .then(setGenders)
-      .catch(() => notify('Gagal memuat pilihan jenis kelamin.', 'error'));
-  }, [notify]);
+    let cancelled = false;
 
-  const update = (field: keyof typeof emptyForm) => (value: string) =>
+    void lookupsApi
+      .genders()
+      .then((result) => {
+        if (!cancelled) setGenders(result);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function update(field: FormField, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
+    // Clearing on edit keeps a stale server message from contradicting what
+    // the user is currently typing.
+    setErrors((current) => (current[field] ? { ...current, [field]: '' } : current));
+  }
+
+  const strength = scorePassword(form.password);
+  const passwordsMatch =
+    form.confirmPassword.length > 0 && form.password === form.confirmPassword;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -69,7 +106,7 @@ export function RegisterPage() {
         confirmPassword: form.confirmPassword,
         dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth).toISOString() : null,
         idGender: form.idGender,
-        primaryAddress: showAddress
+        primaryAddress: withAddress
           ? {
               provinsi: form.provinsi.trim(),
               kotaKabupaten: form.kotaKabupaten.trim(),
@@ -85,8 +122,6 @@ export function RegisterPage() {
     } catch (error) {
       const apiError = error as ApiRequestError;
 
-      // Server field names are PascalCase and nested paths use dots;
-      // the last segment maps to the local form field.
       if (apiError.fieldErrors) {
         setErrors(
           Object.fromEntries(
@@ -106,10 +141,7 @@ export function RegisterPage() {
   }
 
   return (
-    <AuthLayout
-      title="Buat akun baru"
-      subtitle="Isi data berikut untuk mulai belanja di BelanjaYuk."
-    >
+    <AuthLayout title="Buat akun baru" subtitle="Isi data berikut untuk mulai belanja.">
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Input
           name="fullName"
@@ -117,166 +149,182 @@ export function RegisterPage() {
           placeholder="Nama sesuai identitas"
           value={form.fullName}
           error={errors.fullName}
-          onChange={(e) => update('fullName')(e.target.value)}
+          onChange={(event) => update('fullName', event.target.value)}
+          autoComplete="name"
         />
 
         <Input
           name="userName"
           label="Username"
           placeholder="belanjayuk_user"
+          hint="5–30 karakter, harus unik"
           value={form.userName}
           error={errors.userName}
-          onChange={(e) => update('userName')(e.target.value)}
-        />
-
-        <Input
-          name="email"
-          label="Email"
-          type="email"
-          placeholder="contoh@mail.com"
-          value={form.email}
-          error={errors.email}
-          onChange={(e) => update('email')(e.target.value)}
-        />
-
-        <Input
-          name="phoneNumber"
-          label="No. HP"
-          placeholder="08xxxx"
-          value={form.phoneNumber}
-          error={errors.phoneNumber}
-          onChange={(e) => update('phoneNumber')(e.target.value)}
+          onChange={(event) => update('userName', event.target.value)}
+          autoComplete="username"
         />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
-            name="password"
-            label="Kata Sandi"
-            type="password"
-            placeholder="Minimal 8 karakter"
-            value={form.password}
-            error={errors.password}
-            onChange={(e) => update('password')(e.target.value)}
+            name="email"
+            label="Email"
+            type="email"
+            placeholder="contoh@mail.com"
+            value={form.email}
+            error={errors.email}
+            onChange={(event) => update('email', event.target.value)}
+            autoComplete="email"
           />
           <Input
-            name="confirmPassword"
-            label="Konfirmasi Sandi"
-            type="password"
-            placeholder="Ulangi sandi"
-            value={form.confirmPassword}
-            error={errors.confirmPassword}
-            onChange={(e) => update('confirmPassword')(e.target.value)}
+            name="phoneNumber"
+            label="No. HP"
+            inputMode="tel"
+            placeholder="08xxxxxxxxxx"
+            value={form.phoneNumber}
+            error={errors.phoneNumber}
+            onChange={(event) => update('phoneNumber', event.target.value)}
+            autoComplete="tel"
           />
         </div>
 
+        <div>
+          <PasswordInput
+            name="password"
+            label="Kata Sandi"
+            placeholder="Minimal 8 karakter"
+            value={form.password}
+            error={errors.password}
+            onChange={(event) => update('password', event.target.value)}
+            autoComplete="new-password"
+          />
+
+          {form.password && !errors.password && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="flex flex-1 gap-1">
+                {[1, 2, 3, 4].map((step) => (
+                  <span
+                    key={step}
+                    className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                      step <= strength.level ? strength.tone : 'bg-line'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="w-20 text-right text-2xs font-medium text-ink-faint">
+                {strength.label}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <PasswordInput
+          name="confirmPassword"
+          label="Konfirmasi Sandi"
+          placeholder="Ulangi kata sandi"
+          value={form.confirmPassword}
+          error={errors.confirmPassword}
+          hint={passwordsMatch ? 'Kata sandi cocok.' : undefined}
+          onChange={(event) => update('confirmPassword', event.target.value)}
+          autoComplete="new-password"
+        />
+
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            name="dateOfBirth"
+          <DatePicker
             label="Tanggal Lahir"
-            type="date"
             value={form.dateOfBirth}
             error={errors.dateOfBirth}
-            onChange={(e) => update('dateOfBirth')(e.target.value)}
+            onChange={(value) => update('dateOfBirth', value)}
           />
           <Select
             name="idGender"
             label="Jenis Kelamin"
             value={form.idGender}
             error={errors.idGender}
-            onChange={(e) => update('idGender')(e.target.value)}
-            options={genders.map((g) => ({ value: g.id, label: g.name }))}
+            onChange={(event) => update('idGender', event.target.value)}
+            options={genders.map((gender) => ({ value: gender.id, label: gender.name }))}
           />
         </div>
 
-        <div className="rounded-xl border border-[var(--color-line)]">
-          <button
-            type="button"
-            onClick={() => setShowAddress((v) => !v)}
-            aria-expanded={showAddress}
-            className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-[var(--color-ink)]"
+        <Collapse title="Alamat utama" hint="Opsional, bisa diisi nanti">
+          <Checkbox
+            checked={withAddress}
+            onChange={(event) => setWithAddress(event.target.checked)}
           >
-            <svg
-              viewBox="0 0 24 24"
-              className={`size-3.5 transition-transform ${showAddress ? 'rotate-90' : ''}`}
-              fill="currentColor"
-            >
-              <path d="m9 6 6 6-6 6Z" />
-            </svg>
-            Tambahkan alamat utama (opsional)
-          </button>
+            Simpan alamat ini sebagai alamat utama
+          </Checkbox>
 
-          {showAddress && (
-            <div className="space-y-4 border-t border-[var(--color-line)] p-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  name="provinsi"
-                  label="Provinsi"
-                  placeholder="Banten"
-                  value={form.provinsi}
-                  error={errors.provinsi}
-                  onChange={(e) => update('provinsi')(e.target.value)}
-                />
-                <Input
-                  name="kotaKabupaten"
-                  label="Kota/Kabupaten"
-                  placeholder="Tangerang Kota"
-                  value={form.kotaKabupaten}
-                  error={errors.kotaKabupaten}
-                  onChange={(e) => update('kotaKabupaten')(e.target.value)}
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  name="kecamatan"
-                  label="Kecamatan"
-                  placeholder="Tangerang"
-                  value={form.kecamatan}
-                  error={errors.kecamatan}
-                  onChange={(e) => update('kecamatan')(e.target.value)}
-                />
-                <Input
-                  name="kodePos"
-                  label="Kode Pos"
-                  placeholder="15111"
-                  inputMode="numeric"
-                  maxLength={5}
-                  value={form.kodePos}
-                  error={errors.kodePos}
-                  onChange={(e) => update('kodePos')(e.target.value.replace(/\D/g, ''))}
-                />
-              </div>
-
+          <div className={withAddress ? 'space-y-4' : 'space-y-4 opacity-50'}>
+            <div className="grid gap-4 sm:grid-cols-2">
               <Input
-                name="homeAddressDesc"
-                label="Alamat Lengkap"
-                placeholder="Jalan, blok, nomor rumah"
-                value={form.homeAddressDesc}
-                error={errors.homeAddressDesc}
-                onChange={(e) => update('homeAddressDesc')(e.target.value)}
+                name="provinsi"
+                label="Provinsi"
+                placeholder="Banten"
+                disabled={!withAddress}
+                value={form.provinsi}
+                error={errors.provinsi}
+                onChange={(event) => update('provinsi', event.target.value)}
+              />
+              <Input
+                name="kotaKabupaten"
+                label="Kota/Kabupaten"
+                placeholder="Tangerang Kota"
+                disabled={!withAddress}
+                value={form.kotaKabupaten}
+                error={errors.kotaKabupaten}
+                onChange={(event) => update('kotaKabupaten', event.target.value)}
               />
             </div>
-          )}
-        </div>
 
-        <label className="flex cursor-pointer items-start gap-2 text-sm text-[var(--color-muted)]">
-          <input
-            type="checkbox"
-            checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 size-4 rounded border-[var(--color-line)] accent-brand-500"
-          />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                name="kecamatan"
+                label="Kecamatan"
+                placeholder="Tangerang"
+                disabled={!withAddress}
+                value={form.kecamatan}
+                error={errors.kecamatan}
+                onChange={(event) => update('kecamatan', event.target.value)}
+              />
+              <Input
+                name="kodePos"
+                label="Kode Pos"
+                inputMode="numeric"
+                maxLength={5}
+                placeholder="15111"
+                disabled={!withAddress}
+                value={form.kodePos}
+                error={errors.kodePos}
+                onChange={(event) => update('kodePos', event.target.value.replace(/\D/g, ''))}
+              />
+            </div>
+
+            <Input
+              name="homeAddressDesc"
+              label="Alamat Lengkap"
+              placeholder="Jalan, blok, nomor rumah"
+              disabled={!withAddress}
+              value={form.homeAddressDesc}
+              error={errors.homeAddressDesc}
+              onChange={(event) => update('homeAddressDesc', event.target.value)}
+            />
+          </div>
+        </Collapse>
+
+        <Checkbox checked={agreed} onChange={(event) => setAgreed(event.target.checked)}>
           Saya setuju dengan Syarat &amp; Kebijakan Privasi
-        </label>
+        </Checkbox>
 
-        <Button type="submit" loading={submitting} className="w-full">
+        <Button type="submit" size="lg" loading={submitting} fullWidth>
           Buat Akun
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[var(--color-muted)]">
+      <p className="mt-6 text-center text-sm text-ink-soft">
         Sudah punya akun?{' '}
-        <Link to="/login" className="font-semibold text-brand-500 hover:underline">
+        <Link
+          to="/login"
+          className="font-semibold text-brand-500 underline-offset-4 transition-colors duration-150 hover:text-brand-600 hover:underline"
+        >
           Masuk
         </Link>
       </p>
