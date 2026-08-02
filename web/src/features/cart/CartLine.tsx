@@ -8,11 +8,13 @@ const MAX_QTY = 99;
 export function CartLine({ item }: { item: CartItem }) {
   const { updateQty, remove } = useCart();
   const [busy, setBusy] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   const maxAllowed = Math.min(item.availableStock, MAX_QTY);
+  const atStockLimit = item.qty >= item.availableStock && item.availableStock < MAX_QTY;
 
   async function changeQty(nextQty: number) {
-    if (nextQty < 1 || nextQty > maxAllowed) return;
+    if (nextQty < 1 || nextQty > maxAllowed || busy) return;
 
     setBusy(true);
     await updateQty(item.idBuyerCart, nextQty);
@@ -20,65 +22,82 @@ export function CartLine({ item }: { item: CartItem }) {
   }
 
   async function handleRemove() {
-    setBusy(true);
+    // Play the exit before the request so the row does not sit there looking
+    // unresponsive while the server catches up.
+    setRemoving(true);
+    await new Promise((resolve) => setTimeout(resolve, 160));
     await remove(item.idBuyerCart);
-    setBusy(false);
   }
 
   return (
     <article
-      className={`flex gap-3 rounded-xl border border-[var(--color-line)] p-3 transition-opacity ${busy ? 'opacity-60' : ''}`}
+      className={`
+        group relative flex gap-3 rounded-xl border border-line bg-surface p-3
+        transition-[opacity,transform,border-color,box-shadow] duration-200 ease-out-quint
+        hover:border-line-strong hover:shadow-sm
+        ${removing ? 'scale-[0.97] opacity-0' : 'opacity-100'}
+        ${busy ? 'pointer-events-none' : ''}
+      `}
     >
-      <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--color-canvas)]">
+      <div className="size-18 shrink-0 overflow-hidden rounded-lg bg-sunken">
         {item.thumbnailUrl && (
           <img
             src={item.thumbnailUrl}
             alt={item.productName}
             loading="lazy"
-            className="size-full object-cover"
+            className="size-full object-cover transition-transform duration-300 ease-out-quint group-hover:scale-105"
           />
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-start gap-2">
-          <h3 className="flex-1 text-sm font-semibold leading-snug text-[var(--color-ink)]">
+          <h3 className="line-clamp-2 flex-1 text-sm font-semibold leading-snug text-ink">
             {item.productName}
           </h3>
-          {item.discountPercentage ? (
-            <span className="shrink-0 rounded bg-rose-500/10 px-1.5 py-0.5 text-[11px] font-bold text-rose-500">
-              Diskon {item.discountPercentage}%
-            </span>
-          ) : null}
+
+          <button
+            onClick={handleRemove}
+            disabled={busy}
+            aria-label={`Hapus ${item.productName} dari keranjang`}
+            className="grid size-7 shrink-0 place-items-center rounded-lg text-ink-faint opacity-0 transition-[opacity,background-color,color] duration-150 hover:bg-critical/10 hover:text-critical focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-40"
+          >
+            <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 7h16M9 7V5h6v2m-8 0 1 12h8l1-12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-2 text-sm">
-          {item.discountPercentage ? (
-            <span className="text-xs text-[var(--color-muted)] line-through">
-              {formatRupiah(item.price)}
-            </span>
-          ) : null}
-          <span className="font-semibold text-[var(--color-ink)]">
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className="text-sm font-semibold text-ink tabular">
             {formatRupiah(item.finalPrice)}
           </span>
-          {item.discountAmount > 0 && (
-            <span className="text-xs text-rose-500">(- {formatRupiah(item.discountAmount)})</span>
-          )}
+
+          {item.discountPercentage ? (
+            <>
+              <span className="text-2xs text-ink-faint line-through tabular">
+                {formatRupiah(item.price)}
+              </span>
+              <span className="rounded bg-critical/10 px-1.5 py-0.5 text-[10px] font-bold leading-none text-critical tabular">
+                −{item.discountPercentage}%
+              </span>
+            </>
+          ) : null}
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1">
+        <div className="mt-2.5 flex items-end justify-between gap-3">
+          <div className="inline-flex items-center rounded-lg border border-line bg-surface p-0.5">
             <QtyButton
               label="Kurangi jumlah"
               onClick={() => changeQty(item.qty - 1)}
               disabled={busy || item.qty <= 1}
             >
-              −
+              <path d="M5 12h14" />
             </QtyButton>
 
             <span
-              className="min-w-9 text-center text-sm font-semibold text-[var(--color-ink)]"
               aria-live="polite"
+              className="min-w-8 text-center text-sm font-bold text-ink tabular"
             >
               {item.qty}
             </span>
@@ -88,34 +107,26 @@ export function CartLine({ item }: { item: CartItem }) {
               onClick={() => changeQty(item.qty + 1)}
               disabled={busy || item.qty >= maxAllowed}
             >
-              +
+              <path d="M12 5v14M5 12h14" />
             </QtyButton>
-
-            <button
-              onClick={handleRemove}
-              disabled={busy}
-              aria-label={`Hapus ${item.productName}`}
-              className="ml-1 grid size-7 place-items-center rounded-lg text-[var(--color-muted)] transition-colors hover:bg-rose-500/10 hover:text-rose-500 disabled:opacity-50"
-            >
-              <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M4 7h16M9 7V5h6v2m-8 0 1 12h8l1-12" />
-              </svg>
-            </button>
           </div>
 
           <div className="text-right">
-            <span className="block text-[11px] text-[var(--color-muted)]">Subtotal</span>
-            <span className="font-display text-sm font-extrabold text-[var(--color-ink)]">
+            <span className="block text-[10px] font-medium uppercase tracking-wider text-ink-faint">
+              Subtotal
+            </span>
+            <span className="font-display text-sm font-extrabold text-ink tabular">
               {formatRupiah(item.subtotal)}
             </span>
           </div>
         </div>
 
-        {item.qty >= maxAllowed && (
-          <p className="mt-1.5 text-[11px] text-amber-600 dark:text-amber-400">
-            {item.availableStock < MAX_QTY
-              ? `Stok tersisa ${item.availableStock}.`
-              : `Maksimal ${MAX_QTY} per barang.`}
+        {atStockLimit && (
+          <p className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-caution">
+            <svg viewBox="0 0 24 24" className="size-3" fill="currentColor">
+              <path d="M12 2 1 21h22ZM11 10h2v5h-2Zm0 7h2v2h-2Z" />
+            </svg>
+            Stok tersisa {item.availableStock}
           </p>
         )}
       </div>
@@ -139,9 +150,11 @@ function QtyButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="grid size-7 place-items-center rounded-lg border border-[var(--color-line)] text-sm font-bold text-[var(--color-ink)] transition-colors hover:border-brand-500 hover:text-brand-500 disabled:cursor-not-allowed disabled:opacity-40"
+      className="grid size-7 place-items-center rounded-md text-ink-soft transition-[background-color,color,transform] duration-150 ease-out-quint hover:bg-brand-50 hover:text-brand-600 active:scale-90 disabled:cursor-not-allowed disabled:text-ink-faint/40 disabled:hover:bg-transparent dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
     >
-      {children}
+      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        {children}
+      </svg>
     </button>
   );
 }
