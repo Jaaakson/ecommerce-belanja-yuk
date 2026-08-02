@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { formatRupiah } from '../../api/client';
 import { productsApi } from '../../api/products';
 import type { ProductListItem } from '../../api/types';
-import { Logo } from '../../components/Logo';
-import { ThemeToggle } from '../../components/ThemeToggle';
+import { PublicHeader } from '../../components/PublicHeader';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 
@@ -17,12 +16,12 @@ const benefits = [
   {
     title: 'Gratis ongkir',
     body: 'Semua pesanan dikirim tanpa biaya tambahan, berapa pun jumlah barangnya.',
-    icon: 'M5 18H3V6h11v12H9m10 0h2v-5l-3-4h-4v9h1M7.5 20a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z',
+    icon: 'M3 8h11v9H3ZM14 11h4l3 3v3h-7M6.5 20a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm11 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z',
   },
   {
     title: 'Bayar fleksibel',
     body: 'Transfer bank atau bayar di tempat. Pilih yang paling nyaman saat checkout.',
-    icon: 'M2 7h20v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Zm0 0 3-4h14l3 4M7 15h4',
+    icon: 'M2 6h20v12H2Zm0 4h20M6 15h4',
   },
 ];
 
@@ -52,21 +51,7 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="sticky top-0 z-40 border-b border-transparent bg-canvas/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center px-4">
-          <Logo />
-
-          <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle />
-            <Link to="/login">
-              <Button variant="ghost">Masuk</Button>
-            </Link>
-            <Link to="/register">
-              <Button>Daftar</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <main className="mx-auto max-w-5xl px-4">
         <section className="relative overflow-hidden py-16 text-center sm:py-24">
