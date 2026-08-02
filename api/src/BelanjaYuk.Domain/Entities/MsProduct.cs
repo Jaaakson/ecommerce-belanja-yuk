@@ -22,4 +22,5 @@ public class MsProduct : AuditableEntity
 
     public LtCategory? Category { get; set; }
     public MsUserSeller? Seller { get; set; }
+    public ICollection<TrProductImages> Images { get; set; } = new List<TrProductImages>();
 }
