@@ -75,11 +75,31 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+const string WebClientCorsPolicy = "WebClient";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(WebClientCorsPolicy, policy =>
+    {
+        // Origins come from configuration so the Docker compose setup can point
+        // at the container hostname without a rebuild.
+        var origins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
+        policy.WithOrigins(origins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 await app.Services.InitializeDatabaseAsync();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseCors(WebClientCorsPolicy);
 
 if (app.Environment.IsDevelopment())
 {
