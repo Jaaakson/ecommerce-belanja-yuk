@@ -9,6 +9,5 @@ public class TrBuyerCart : AuditableEntity
     public string IdProduct { get; set; } = null!;
     public int Qty { get; set; }
 
-    public MsUser? User { get; set; }
     public MsProduct? Product { get; set; }
 }

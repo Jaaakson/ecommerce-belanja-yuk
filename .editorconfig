@@ -370,3 +370,9 @@ csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_var_elsewhere = false:suggestion
 dotnet_diagnostic.CS8618.severity = warning
+
+# Migration files are produced by `dotnet ef` and regenerated on every schema
+# change. Style rules would be reintroduced by the generator on each run.
+[**/Persistence/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none

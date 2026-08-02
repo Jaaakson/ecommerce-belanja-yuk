@@ -23,6 +23,4 @@ public class TrHomeAddress : AuditableEntity
     /// enforced in the service layer, not by a database constraint.
     /// </summary>
     public bool IsPrimaryAddress { get; set; }
-
-    public MsUser? User { get; set; }
 }

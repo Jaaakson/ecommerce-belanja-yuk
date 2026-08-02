@@ -23,7 +23,6 @@ public class TrBuyerTransaction : AuditableEntity
 
     public string? RatingComment { get; set; }
 
-    public MsUser? User { get; set; }
     public LtPayment? Payment { get; set; }
     public ICollection<TrBuyerTransactionDetail> Details { get; set; } = new List<TrBuyerTransactionDetail>();
 }
