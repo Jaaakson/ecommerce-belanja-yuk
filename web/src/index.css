@@ -1,64 +1,203 @@
 @import 'tailwindcss';
 
+/* The theme is class-driven, not media-driven. Without this, every `dark:`
+   utility silently falls back to the OS preference and ignores the toggle. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-brand-50: #eff5ff;
-  --color-brand-100: #dbe8fe;
+  /* --- Brand ------------------------------------------------------------ */
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe7fe;
+  --color-brand-200: #bfd4fe;
+  --color-brand-300: #93b4fd;
+  --color-brand-400: #608bfa;
   --color-brand-500: #2563eb;
   --color-brand-600: #1d4ed8;
   --color-brand-700: #1e40af;
+  --color-brand-800: #1e3a8a;
 
+  /* --- Semantic surfaces (overridden by .dark below) -------------------- */
+  --color-canvas: #f5f7fb;
   --color-surface: #ffffff;
-  --color-canvas: #f4f7fe;
-  --color-ink: #0f172a;
-  --color-muted: #64748b;
-  --color-line: #e2e8f0;
+  --color-raised: #ffffff;
+  --color-sunken: #eef2f9;
+  --color-line: #e4e9f2;
+  --color-line-strong: #cbd5e6;
 
+  --color-ink: #0d1526;
+  --color-ink-soft: #475569;
+  --color-ink-faint: #8494ad;
+
+  --color-positive: #059669;
+  --color-critical: #e11d48;
+  --color-caution: #d97706;
+
+  /* --- Type ------------------------------------------------------------- */
   --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  /* --- Radius ----------------------------------------------------------- */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  /* --- Elevation --------------------------------------------------------
+     Layered and tinted with the brand hue rather than pure black. A single
+     large blur reads as a drop shadow; stacking a tight contact shadow under
+     a soft ambient one is what makes a surface look lifted instead of pasted. */
+  --shadow-xs: 0 1px 2px -1px rgb(13 21 38 / 0.06);
+  --shadow-sm: 0 1px 2px -1px rgb(13 21 38 / 0.07), 0 2px 6px -2px rgb(37 99 235 / 0.06);
+  --shadow-md: 0 2px 4px -2px rgb(13 21 38 / 0.08), 0 8px 20px -6px rgb(37 99 235 / 0.10);
+  --shadow-lg: 0 4px 8px -4px rgb(13 21 38 / 0.10), 0 16px 36px -10px rgb(37 99 235 / 0.14);
+  --shadow-brand: 0 4px 14px -4px rgb(37 99 235 / 0.45);
+
+  /* --- Motion -----------------------------------------------------------
+     One decelerating curve for everything. Mixing easings across components
+     is what makes an interface feel assembled rather than designed. */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-swift: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --animate-rise: rise 260ms var(--ease-out-quint) both;
+  --animate-fade-in: fade-in 200ms var(--ease-out-quint) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
 }
 
 .dark {
-  --color-surface: #131a2a;
-  --color-canvas: #0b1120;
-  --color-ink: #e8edf7;
-  --color-muted: #94a3b8;
+  --color-canvas: #080c15;
+  --color-surface: #0f1523;
+  --color-raised: #161d2e;
+  --color-sunken: #0b1120;
   --color-line: #1e293b;
+  --color-line-strong: #33415c;
+
+  --color-ink: #e8edf7;
+  --color-ink-soft: #9fb0c9;
+  --color-ink-faint: #64748b;
+
+  --color-positive: #34d399;
+  --color-critical: #fb7185;
+  --color-caution: #fbbf24;
+
+  --shadow-xs: 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 4px -2px rgb(0 0 0 / 0.5), 0 8px 20px -6px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 4px 8px -4px rgb(0 0 0 / 0.55), 0 16px 36px -10px rgb(0 0 0 / 0.5);
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     background-color: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-body);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Theme switches should read as a dissolve, not a flash of unstyled colour. */
+    transition:
+      background-color 240ms var(--ease-out-quint),
+      color 240ms var(--ease-out-quint);
   }
 
-  /* Keyboard focus stays visible; pointer focus does not add noise. */
+  /* Tabular figures keep prices from shifting width as quantities change. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-brand-500);
     outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background-color: var(--color-brand-200);
+    color: var(--color-brand-800);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-strong);
+    border: 3px solid var(--color-canvas);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-ink-faint);
   }
 }
 
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Skeletons sweep instead of pulsing: a moving highlight reads as "loading",
+   a fading block reads as "broken". */
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-sunken) 25%,
+    color-mix(in oklab, var(--color-sunken) 60%, var(--color-surface)) 37%,
+    var(--color-sunken) 63%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
