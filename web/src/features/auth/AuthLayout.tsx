@@ -2,7 +2,11 @@ import type { ReactNode } from 'react';
 import { Logo } from '../../components/Logo';
 import { ThemeToggle } from '../../components/ThemeToggle';
 
-const highlights = ['Gratis ongkir', 'Bayar COD', 'Promo harian', 'Pengiriman cepat'];
+const highlights = [
+  { label: 'Gratis ongkir', icon: 'M5 18H3V6h11v12H9m10 0h2v-5l-3-4h-4v9h1' },
+  { label: 'Bayar COD', icon: 'M2 7h20v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Zm0 0 3-4h14l3 4M12 12v4m-2-2h4' },
+  { label: 'Promo harian', icon: 'M20 12V8H6a2 2 0 0 1 0-4h12v4M4 6v12a2 2 0 0 0 2 2h14v-4M18 12a2 2 0 0 0 0 4h4v-4Z' },
+];
 
 export function AuthLayout({
   title,
@@ -14,47 +18,67 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] px-4 py-8">
-      <div className="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-        <aside className="hidden rounded-3xl border border-[var(--color-line)] bg-[var(--color-surface)] p-8 lg:block">
-          <div className="mb-8 h-40 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 p-6">
-            <span className="grid size-11 place-items-center rounded-full bg-white/20 backdrop-blur">
-              <span className="size-5 rounded-full bg-white" />
-            </span>
-            <div className="mt-4 space-y-2">
-              <span className="block h-2 w-28 rounded-full bg-white/70" />
-              <span className="block h-2 w-20 rounded-full bg-white/40" />
-            </div>
+    <div className="relative min-h-screen overflow-hidden bg-canvas px-4 py-6 sm:py-10">
+      {/* A single soft brand glow anchors the page to the identity without
+          adding an ornament that competes with the form. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 size-[38rem] -translate-x-1/2 rounded-full bg-brand-500/10 blur-3xl dark:bg-brand-500/15"
+      />
+
+      <div className="relative mx-auto grid w-full max-w-5xl gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <aside className="hidden overflow-hidden rounded-3xl border border-line bg-surface shadow-sm lg:block">
+          <div className="relative bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-7">
+            <div
+              aria-hidden
+              className="absolute -right-8 -top-8 size-32 rounded-full bg-white/10"
+            />
+            <div
+              aria-hidden
+              className="absolute -bottom-12 -left-6 size-28 rounded-full bg-white/5"
+            />
+
+            <p className="relative font-display text-2xl font-extrabold leading-tight text-white">
+              Belanja jadi
+              <br />
+              lebih ringan.
+            </p>
+            <p className="relative mt-2 max-w-64 text-sm leading-relaxed text-white/75">
+              Harga jujur, pengiriman cepat, dan ribuan produk yang siap dikirim hari ini.
+            </p>
           </div>
 
-          <h2 className="font-display text-xl font-extrabold text-[var(--color-ink)]">
-            BelanjaYuk — lebih fun, lebih cepat
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted)]">
-            Satu tempat untuk semua kebutuhan harian, dengan harga yang jujur dan pengiriman yang
-            bisa diandalkan.
-          </p>
-
-          <ul className="mt-6 flex flex-wrap gap-2">
+          <ul className="divide-y divide-line">
             {highlights.map((item) => (
-              <li
-                key={item}
-                className="rounded-full border border-[var(--color-line)] px-3 py-1 text-xs font-medium text-[var(--color-muted)]"
-              >
-                {item}
+              <li key={item.label} className="flex items-center gap-3 px-6 py-3.5">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/12 dark:text-brand-300">
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 24 24"
+                    className="size-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d={item.icon} />
+                  </svg>
+                </span>
+                <span className="text-sm font-medium text-ink-soft">{item.label}</span>
               </li>
             ))}
           </ul>
         </aside>
 
-        <main className="rounded-3xl border border-[var(--color-line)] bg-[var(--color-surface)] p-6 sm:p-8">
-          <div className="mb-6 flex items-start justify-between">
-            <div>
+        <main className="animate-rise rounded-3xl border border-line bg-surface p-6 shadow-md sm:p-8">
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div className="min-w-0">
               <Logo />
-              <h1 className="mt-4 font-display text-2xl font-extrabold leading-tight text-[var(--color-ink)]">
+              <h1 className="mt-5 font-display text-2xl font-extrabold leading-tight tracking-tight text-ink">
                 {title}
               </h1>
-              <p className="mt-1 text-sm text-[var(--color-muted)]">{subtitle}</p>
+              <p className="mt-1.5 text-sm text-ink-soft">{subtitle}</p>
             </div>
             <ThemeToggle />
           </div>
