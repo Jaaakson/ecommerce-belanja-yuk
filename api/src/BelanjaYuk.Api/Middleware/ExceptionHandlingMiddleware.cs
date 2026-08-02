@@ -46,6 +46,10 @@ public class ExceptionHandlingMiddleware(
                 StatusCodes.Status401Unauthorized,
                 ApiError.Create(unauthorized.Message)),
 
+            NotFoundException notFound => (
+                StatusCodes.Status404NotFound,
+                ApiError.Create(notFound.Message)),
+
             _ => (
                 StatusCodes.Status500InternalServerError,
                 ApiError.Create("Terjadi kesalahan pada server."))
